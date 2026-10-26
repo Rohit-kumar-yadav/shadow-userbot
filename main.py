@@ -1,6 +1,8 @@
+import os
 import sys
 import time
 import asyncio
+import aiohttp
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 import config
@@ -18,6 +20,31 @@ def check_configuration():
         print("3. Edit .env and enter your credentials.")
         print("=" * 60 + "\n")
         sys.exit(1)
+
+
+async def keep_alive_worker():
+    """
+    Automatically pings the cloud URL every 10 minutes to prevent Render free tier from sleeping.
+    Render automatically exposes RENDER_EXTERNAL_URL in its environment.
+    """
+    raw_url = os.getenv("RENDER_EXTERNAL_URL") or os.getenv("KEEP_ALIVE_URL") or ""
+    if not raw_url:
+        return
+
+    target_url = raw_url.rstrip("/") + "/health"
+    print(f"💓 Keep-Alive worker initialized for: {target_url} (pings every 10m to prevent sleep)")
+
+    # Wait 90 seconds after boot before first ping
+    await asyncio.sleep(90)
+
+    async with aiohttp.ClientSession() as session:
+        while True:
+            try:
+                async with session.get(target_url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                    print(f"💓 [Keep-Alive Ping] Status: {resp.status} (Render sleep prevented)")
+            except Exception as e:
+                print(f"[-] [Keep-Alive Ping Error]: {e}")
+            await asyncio.sleep(600)  # Ping every 10 minutes (Render sleeps after 15m)
 
 
 async def start_health_server(port: int):
@@ -111,6 +138,10 @@ async def main():
     # Start cloud web health server if PORT environment variable is present (e.g. on Render/Koyeb)
     if config.PORT:
         await start_health_server(config.PORT)
+
+    # Start automatic self-ping keep-alive loop to prevent Render from sleeping
+    if os.getenv("RENDER_EXTERNAL_URL") or os.getenv("KEEP_ALIVE_URL"):
+        asyncio.create_task(keep_alive_worker())
 
     print("\n🚀 Userbot is now running in the background!")
     print(f"   Send `{config.COMMAND_PREFIX}alive` or `{config.COMMAND_PREFIX}help` in any chat to test.\n")
