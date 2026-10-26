@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: social-hunter-userbot
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: API_ID
+        sync: false
+      - key: API_HASH
+        sync: false
+      - key: SESSION_STRING
+        sync: false
+      - key: COMMAND_PREFIX
+        value: "."
+      - key: LOG_CHANNEL
+        sync: false
+      - key: TERABOX_COOKIE
+        sync: false

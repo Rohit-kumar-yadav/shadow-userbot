@@ -1,0 +1,13 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+*.session
+*.session-journal
+data/*.session
+data/session_string.txt
+data/downloads/*
+!data/downloads/.gitkeep
+.git/
+.vscode/

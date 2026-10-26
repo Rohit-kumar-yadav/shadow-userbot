@@ -1,0 +1,25 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Telegram session and sensitive files
+.env
+*.session
+*.session-journal
+data/*.session
+data/*.session-journal
+data/session_string.txt
+
+# Download cache
+data/downloads/*
+!data/downloads/.gitkeep
+
+# IDE files
+.vscode/
+.idea/
